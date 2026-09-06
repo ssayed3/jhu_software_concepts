@@ -1,9 +1,32 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block header %}
-  <h2>{% block title %}About{% endblock title %}</h2>
-{% endblock header %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-  <p>This is a message board for friendly messages.</p>
-{% endblock content %}
+
+    <div class="home-container">
+
+        <div class="bio">
+            <h1>Sayed Sayed</h1>
+            <h2>Internal Medicine Physician</h2>
+
+            <p>
+                Welcome to my personal developer website. I am an Internal Medicine
+                physician currently working at Cleveland Clinic Abu Dhabi in the
+                United Arab Emirates. I graduated from Cairo University in Egypt
+                and completed my Internal Medicine training at Queens Hospital in
+                New York. I have a strong interest in artificial intelligence and
+                software development, particularly their applications in healthcare.
+                I am currently developing my Python programming skills and exploring
+                how technology can improve healthcare delivery.
+            </p>
+        </div>
+
+        <div class="profile-image">
+            <img src="{{ url_for('static', filename='profile.jpg') }}"
+                 alt="Profile picture">
+        </div>
+
+    </div>
+
+{% endblock %}

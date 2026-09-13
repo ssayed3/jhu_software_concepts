@@ -3,3 +3,11 @@
 __pycache__/
 *.pyc
 venv/
+
+# Module 2 local files
+module_2/venv/
+module_2/__pycache__/
+module_2/llm_hosting/models/
+module_2/llm_cleaning_cache.json
+module_2/scrape_progress.json
+module_2/last_page.html

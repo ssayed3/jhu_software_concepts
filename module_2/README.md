@@ -1,7 +1,9 @@
 # Module 2 - Web Scraping
 
 **Name:** Sayed Sayed  
-**JHED:** ssayed3
+**JHED:** ssayed3  
+**Assignment:** Module 2 - Web Scraping  
+**Due Date:** September 13, 2026 at 11:59 PM
 
 ## Overview
 
@@ -11,8 +13,8 @@ The final dataset contains 30,000 unique applicant records.
 
 ## Files
 
-- `scrape.py` - HTML parsing and data extraction functions.
-- `collect_data.py` - browser-based collection, pagination, duplicate prevention, delays, and resume support.
+- `scrape.py` - main scraping program, including browser collection, HTML parsing, pagination, duplicate prevention, delays, and resume support.
+- `collect_data.py` - compatibility launcher that calls the scraper in `scrape.py`.
 - `clean.py` - standardizes program and university names with the provided local LLM.
 - `applicant_data.json` - 30,000 original scraped applicant records.
 - `llm_extend_applicant_data.json` - cleaned dataset with LLM-generated fields.
@@ -38,7 +40,7 @@ A delay is included between pages.
 
 ## Scraping Approach
 
-`collect_data.py` opens GradCafe survey pages in Google Chrome and captures the rendered HTML through AppleScript.
+`scrape.py` opens GradCafe survey pages in Google Chrome and captures the rendered HTML through AppleScript.
 
 BeautifulSoup parses the HTML and extracts applicant rows and their associated detail or comment rows.
 
@@ -132,7 +134,7 @@ Install dependencies:
 
 From the `module_2` directory:
 
-    python collect_data.py
+    python scrape.py
 
 The records are saved to `applicant_data.json`.
 

@@ -1,16 +1,20 @@
 import json
+import os
 import sys
 from pathlib import Path
 
-LLM_FOLDER = Path(__file__).parent / "llm_hosting"
+BASE_FOLDER = Path(__file__).resolve().parent
+LLM_FOLDER = BASE_FOLDER / "llm_hosting"
+
+os.chdir(LLM_FOLDER)
 sys.path.insert(0, str(LLM_FOLDER))
 
 from app import _call_llm
 
 
-INPUT_FILE = Path("applicant_data.json")
-OUTPUT_FILE = Path("llm_extend_applicant_data.json")
-CACHE_FILE = Path("llm_cleaning_cache.json")
+INPUT_FILE = BASE_FOLDER / "applicant_data.json"
+OUTPUT_FILE = BASE_FOLDER / "llm_extend_applicant_data.json"
+CACHE_FILE = BASE_FOLDER / "llm_cleaning_cache.json"
 
 
 def load_json(path: Path):

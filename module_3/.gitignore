@@ -1,0 +1,15 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.idea/
+.DS_Store
+
+# Local/generated scraper files
+last_page.html
+scrape_progress.json
+
+# Large local LLM/model files
+*.gguf
+*.bin

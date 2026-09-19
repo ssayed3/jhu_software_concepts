@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graduate Admissions Analysis</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Graduate Admissions Analysis</h1>
+
+    <p class="subtitle">
+        Module 3 - Database Queries, SQLAlchemy, and Dynamic Webpages
+    </p>
+
+    <div class="controls">
+
+        <form action="{{ url_for('pull_data') }}" method="post">
+            <button type="submit"
+                    {% if scrape_running %}disabled{% endif %}>
+                Pull Data
+            </button>
+        </form>
+
+        <form action="{{ url_for('update_analysis') }}" method="post">
+            <button type="submit">
+                Update Analysis
+            </button>
+        </form>
+
+    </div>
+
+    <div class="status">
+        {{ scrape_status }}
+    </div>
+
+    <h2>Analysis Results</h2>
+
+    {% for result in results %}
+        <div class="result-card">
+            <h3>{{ result.question }}</h3>
+            <p>{{ result.answer }}</p>
+        </div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

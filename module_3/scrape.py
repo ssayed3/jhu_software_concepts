@@ -25,12 +25,14 @@ def load_html(file_path: str) -> BeautifulSoup:
     html = Path(file_path).read_text(encoding="utf-8")
     return BeautifulSoup(html, "html.parser")
 
+
 def parse_decision(decision: str) -> tuple[str, str | None]:
     if " on " in decision:
         status, decision_date = decision.split(" on ", 1)
         return status, decision_date
 
     return decision, None
+
 
 def parse_row(row) -> dict:
     cells = row.find_all("td")
@@ -66,6 +68,8 @@ def parse_row(row) -> dict:
         "gpa": None,
         "comment": None,
     }
+
+
 def parse_detail_row(row) -> dict:
     text = row.get_text(" | ", strip=True)
 
@@ -116,6 +120,7 @@ def parse_detail_row(row) -> dict:
 
     return details
 
+
 def parse_gre_from_comment(comment: str | None) -> dict:
     values = {
         "gre": None,
@@ -127,18 +132,30 @@ def parse_gre_from_comment(comment: str | None) -> dict:
         return values
 
     if "Quantitative:" in comment:
-        quantitative = comment.split("Quantitative:", 1)[1].split(",", 1)[0].strip()
+        quantitative = (
+            comment.split("Quantitative:", 1)[1]
+            .split(",", 1)[0]
+            .strip()
+        )
         values["gre"] = quantitative
 
     if "Verbal:" in comment:
-        verbal = comment.split("Verbal:", 1)[1].split(",", 1)[0].strip()
+        verbal = (
+            comment.split("Verbal:", 1)[1]
+            .split(",", 1)[0]
+            .strip()
+        )
         values["gre_v"] = verbal
 
     if "Analytical Writing:" in comment:
-        writing = comment.split("Analytical Writing:", 1)[1].strip()
+        writing = (
+            comment.split("Analytical Writing:", 1)[1]
+            .strip()
+        )
         values["gre_aw"] = writing
 
     return values
+
 
 def parse_page(soup: BeautifulSoup) -> list[dict]:
     rows = soup.find_all("tr")
@@ -180,16 +197,18 @@ def parse_page(soup: BeautifulSoup) -> list[dict]:
 
             else:
                 for key in (
-                        "season",
-                        "citizenship",
-                        "gre",
-                        "gre_v",
-                        "gre_aw",
-                        "gpa",
+                    "season",
+                    "citizenship",
+                    "gre",
+                    "gre_v",
+                    "gre_aw",
+                    "gpa",
                 ):
                     if extra[key] is not None:
                         current_applicant[key] = extra[key]
+
     return applicants
+
 
 def save_data(data: list[dict], filename: str) -> None:
     with open(filename, "w", encoding="utf-8") as file:
@@ -356,8 +375,6 @@ def collect_data() -> None:
 
     print(f"Target records for this run: {target_records}")
 
-    target_records = len(all_applicants) + NEW_RECORDS_PER_RUN
-
     while len(all_applicants) < target_records:
 
         if not validate_survey_url(current_url):
@@ -431,7 +448,7 @@ def collect_data() -> None:
             all_applicants.append(applicant)
             new_records += 1
 
-            if len(all_applicants) >= TARGET_RECORDS:
+            if len(all_applicants) >= target_records:
                 break
 
         save_data(

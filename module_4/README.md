@@ -423,6 +423,12 @@ python -m pytest -m "web or buttons or analysis or db or integration"
 
 Module 4 uses Sphinx for project documentation.
 
+## Published Documentation
+
+The published Sphinx documentation is available on Read the Docs:
+
+https://jhu-software-concepts-ssayed3.readthedocs.io/en/latest/
+
 The Sphinx source files are located in:
 
 ```text

@@ -40,6 +40,7 @@ def test_update_analysis_when_busy():
         response = client.post("/update-analysis")
 
         assert response.status_code == 409
+        assert response.get_json() == {"busy": True}
 
     finally:
         scrape_lock.release()

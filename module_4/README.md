@@ -557,8 +557,7 @@ docs/
 
 # GitHub Repository
 
-The project is stored in the private JHU Software Concepts GitHub
-repository.
+The project is stored in the public JHU Software Concepts GitHub repository.
 
 The repository SSH URL is provided separately as required for
 submission.

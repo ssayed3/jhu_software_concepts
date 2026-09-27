@@ -1,0 +1,22 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.idea/
+.DS_Store
+
+# Local/generated scraper files
+last_page.html
+scrape_progress.json
+
+# Large local LLM/model files
+*.gguf
+*.bin
+
+# Pytest coverage cache
+.coverage
+
+# Large local data files
+applicant_data.json
+llm_extend_applicant_data.json

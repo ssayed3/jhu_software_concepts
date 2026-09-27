@@ -9,7 +9,10 @@ LLM_FOLDER = BASE_FOLDER.parent / "llm_hosting"
 os.chdir(LLM_FOLDER)
 sys.path.insert(0, str(LLM_FOLDER))
 
-from app import _call_llm
+
+def _call_llm(text):  # pragma: no cover
+    from app import _call_llm as real_call_llm
+    return real_call_llm(text)
 
 
 INPUT_FILE = BASE_FOLDER / "applicant_data.json"

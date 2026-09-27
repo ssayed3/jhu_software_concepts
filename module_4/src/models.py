@@ -8,9 +8,15 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 DB_NAME = "module3_db"
 DB_USER = os.getenv("DB_USER", "sayedsayed")
 
-DATABASE_URL = os.getenv(
+RAW_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgresql+psycopg://{DB_USER}@/{DB_NAME}"
+    f"postgresql://{DB_USER}@/{DB_NAME}"
+)
+
+DATABASE_URL = RAW_DATABASE_URL.replace(
+    "postgresql://",
+    "postgresql+psycopg://",
+    1
 )
 
 class Base(DeclarativeBase):

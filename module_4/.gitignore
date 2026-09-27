@@ -20,3 +20,6 @@ scrape_progress.json
 # Large local data files
 applicant_data.json
 llm_extend_applicant_data.json
+
+# Sphinx generated documentation
+docs/_build/

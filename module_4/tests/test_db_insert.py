@@ -1,5 +1,7 @@
 import pytest
 
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -344,7 +346,10 @@ def test_real_postgresql_insert_and_idempotency(tmp_path):
     import psycopg
     import src.load_data as load_data
 
-    test_database_url = "postgresql://sayedsayed@/module4_test_db"
+    test_database_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://sayedsayed@/module4_test_db"
+    )
 
     applicants = [
         {

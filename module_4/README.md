@@ -84,7 +84,7 @@ The extended records are stored in:
 `llm_extend_applicant_data.json`
 
 These standardized fields allow the original downloaded fields to be
-compared with LLM-generated versions during Module 3 analysis.
+compared with LLM-generated versions during database analysis.
 
 # Module 3 - Database Queries, SQLAlchemy, and Dynamic Webpages
 
@@ -97,15 +97,8 @@ the database.
 
 ## PostgreSQL Database
 
-The database used for Module 3 is:
-
-`module3_db`
-
-The project contains a single applicant table called:
-
-`applicants`
-
-The table stores:
+The project contains an `applicants` table that stores applicant
+information including:
 
 - applicant ID
 - university/program information
@@ -123,127 +116,60 @@ The table stores:
 - LLM-generated program
 - LLM-generated university
 
-The applicant URL is used to prevent unnecessary duplicate records when
-the loader is run multiple times.
+Applicant URLs are unique so duplicate applicant records are not
+unnecessarily inserted when data is loaded more than once.
 
 Database credentials are not stored directly in the repository.
 
 ## Raw SQL Analysis
 
-The file:
+The Module 3 analysis uses raw SQL through psycopg to answer the required
+graduate admissions questions.
 
-`query_data.py`
+The current implementation is located in:
 
-performs the required analysis using raw SQL through psycopg.
-
-The analysis includes Questions 1 through 9 from the assignment and two
-additional original questions.
-
-The two original questions are:
-
-1. How many Fall 2026 applicants were accepted?
-2. What is the average GPA of international applicants for Fall 2026?
-
-The complete SQL queries, results, and explanations are also included
-in:
-
-`query_results.pdf`
+`src/query_data.py`
 
 ## SQLAlchemy ORM
 
-The file:
+The SQLAlchemy `Applicant` model is located in:
 
-`models.py`
+`src/models.py`
 
-defines the SQLAlchemy `Applicant` model and maps it to the existing
-PostgreSQL `applicants` table.
+The ORM analysis is located in:
 
-The file:
+`src/orm_queries.py`
 
-`orm_queries.py`
-
-repeats the required questions using SQLAlchemy ORM expressions rather
-than handwritten SQL.
-
-## Raw SQL vs SQLAlchemy Comparison
-
-Question 1 was answered using both raw SQL and SQLAlchemy.
-
-### Raw SQL
-
-```sql
-SELECT COUNT(*)
-FROM applicants
-WHERE LOWER(term) = 'fall 2026';
-```
-
-Result:
-
-`29,577`
-
-### SQLAlchemy
-
-```python
-statement = (
-    select(func.count())
-    .select_from(Applicant)
-    .where(func.lower(Applicant.term) == "fall 2026")
-)
-
-result = session.scalar(statement)
-```
-
-Result:
-
-`29,577`
-
-The raw SQL version is concise and makes the exact database query easy
-to see and control. SQLAlchemy provides a Python-based abstraction that
-allows the query to use the same `Applicant` model as the rest of the
-application, which can improve maintainability and reduce the need to
-write SQL strings throughout a larger project. The ORM approach is also
-convenient when database operations are closely integrated with Python
-application logic. Raw SQL, however, can be easier to read when a query
-is simple and provides more direct control over the SQL sent to the
-database.
+This provides a Python-based ORM alternative to handwritten SQL queries.
 
 ## Dynamic Flask Webpage
 
-The Flask application is contained in:
+The Flask application is located in:
 
-`app.py`
+`src/app.py`
 
-The webpage dynamically queries PostgreSQL using the SQLAlchemy
-`Applicant` model.
-
-It displays all required analysis results, including the two original
-questions.
+The webpage dynamically retrieves PostgreSQL analysis results.
 
 The webpage template is located in:
 
-`templates/index.html`
+`src/templates/index.html`
 
 The CSS stylesheet is located in:
 
-`static/style.css`
+`src/static/style.css`
 
 ## Pull Data
 
 The webpage includes a **Pull Data** button.
 
-Pull Data runs the GradCafe scraper in a background thread. The scraper
-checks GradCafe for newly available applicant records and prevents
-duplicate applicant URLs from being added to the local data.
+Pull Data runs the GradCafe scraper and loads newly collected usable
+records into PostgreSQL.
 
-After the scraping process finishes, newly collected usable records are
-loaded into PostgreSQL.
+Applicant URLs are unique, which prevents overlapping records from being
+inserted repeatedly.
 
 A lock prevents a second scraping process from starting while another
 one is already active.
-
-The webpage displays a status message to tell the user whether data is
-being retrieved, whether the process completed, or whether an error
-occurred.
 
 ## Update Analysis
 
@@ -252,136 +178,387 @@ The webpage also includes an **Update Analysis** button.
 Update Analysis does not run the scraper.
 
 Instead, it re-queries the current PostgreSQL database and displays the
-most up-to-date analysis results available in the database.
+most up-to-date analysis results.
 
-If a Pull Data operation is currently running, the webpage informs the
-user that new data is still being retrieved while displaying analysis
-from the current database.
+# Module 4 - Testing and Documentation
 
-# Running Module 3
+Module 4 extends the existing GradCafe application with automated
+testing, code coverage, PostgreSQL integration testing, continuous
+integration, and Sphinx documentation.
 
-Module 3 uses PostgreSQL, psycopg, SQLAlchemy, Flask, and BeautifulSoup.
+The main Module 4 project structure is:
 
-## 1. Install Requirements
+```text
+module_4/
+├── src/
+├── tests/
+├── docs/
+├── pytest.ini
+├── requirements.txt
+├── coverage_summary.txt
+└── README.md
+```
 
-From the `module_3` directory, install the required Python packages:
+## Source Code
+
+Application source code is stored under:
+
+```text
+src/
+```
+
+The major modules include:
+
+- `src/app.py` - Flask application and routes
+- `src/scrape.py` - GradCafe scraping
+- `src/collect_data.py` - scraper entry point
+- `src/clean.py` - applicant data cleaning
+- `src/load_data.py` - PostgreSQL table creation and data loading
+- `src/models.py` - SQLAlchemy model and database configuration
+- `src/query_data.py` - raw SQL analysis
+- `src/orm_queries.py` - SQLAlchemy ORM analysis
+
+## Automated Testing
+
+Automated tests are stored under:
+
+```text
+tests/
+```
+
+The test suite verifies:
+
+- Flask application creation and configuration
+- the `/analysis` page
+- Pull Data behavior
+- Update Analysis behavior
+- busy-state HTTP 409 responses
+- analysis output and percentage formatting
+- database insertion
+- database idempotency
+- raw SQL queries
+- SQLAlchemy ORM queries
+- scraping functions
+- cleaning functions
+- PostgreSQL integration
+- end-to-end workflows
+- repeated pulls containing overlapping records
+
+The integration tests use fake scraper data rather than making live
+internet requests.
+
+A PostgreSQL integration test verifies that fake scraper records can
+pass through the Flask Pull Data endpoint and be inserted into a real
+PostgreSQL test database.
+
+Another integration test performs multiple pulls containing overlapping
+applicant records and verifies that the database uniqueness policy
+prevents duplicate URLs from being inserted.
+
+## Pytest Markers
+
+Every test uses one of the required pytest markers:
+
+- `web`
+- `buttons`
+- `analysis`
+- `db`
+- `integration`
+
+All marked tests can be run with:
+
+```bash
+python -m pytest -m "web or buttons or analysis or db or integration"
+```
+
+## Code Coverage
+
+The project uses `pytest-cov`.
+
+Coverage requirements are configured in:
+
+```text
+pytest.ini
+```
+
+The complete test suite requires 100% coverage of the Python code under
+`src/`.
+
+The final local test result is:
+
+```text
+92 passed
+100% coverage
+```
+
+The coverage result is also recorded in:
+
+```text
+coverage_summary.txt
+```
+
+# Running Module 4
+
+Module 4 uses PostgreSQL, psycopg, SQLAlchemy, Flask, BeautifulSoup,
+pytest, pytest-cov, and Sphinx.
+
+## 1. Create a Virtual Environment
+
+From the `module_4` directory:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+## 2. Install Requirements
+
+Install the required Python packages:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 2. Create the PostgreSQL Database
+## 3. Configure PostgreSQL
 
-Make sure PostgreSQL is installed and running.
+PostgreSQL must be installed and running for database-dependent
+functionality and integration tests.
 
-Create a PostgreSQL database named:
+The database connection can be supplied using the `DATABASE_URL`
+environment variable.
+
+For example:
+
+```bash
+export DATABASE_URL="postgresql://username@/module4_test_db"
+```
+
+The PostgreSQL user can also be supplied through:
 
 ```text
-module3_db
+DB_USER
 ```
 
-The database user can be supplied through the `DB_USER` environment
-variable.
+When `DATABASE_URL` is not supplied, the application uses its configured
+local default database connection.
 
-If `DB_USER` is not supplied, the project uses the local development
-username configured in the code.
+## 4. Run the Flask Application
 
-## 3. Load the Data into PostgreSQL
-
-Run:
+From the `module_4` directory:
 
 ```bash
-python load_data.py
+python -m src.app
 ```
 
-This creates the `applicants` table if necessary and loads the cleaned
-Module 2 applicant data.
+Open the local Flask address displayed in the Terminal.
 
-Applicant URLs are used to prevent unnecessary duplicate records if the
-loader is run more than once.
-
-## 4. Run the Raw SQL Analysis
-
-Run:
-
-```bash
-python query_data.py
-```
-
-This runs Questions 1 through 9 and the two original analysis questions
-using raw SQL through psycopg.
-
-## 5. Run the SQLAlchemy ORM Analysis
-
-Run:
-
-```bash
-python orm_queries.py
-```
-
-This repeats the required analysis questions using the SQLAlchemy
-`Applicant` model rather than handwritten SQL.
-
-## 6. Run the Flask Application
-
-Run:
-
-```bash
-python app.py
-```
-
-Open the local Flask address displayed in the Terminal, typically:
+The analysis page is available at:
 
 ```text
-http://127.0.0.1:5000
+/analysis
 ```
 
-The webpage dynamically retrieves the analysis results from PostgreSQL
-using SQLAlchemy.
+The webpage displays the graduate admissions analysis and provides
+**Pull Data** and **Update Analysis** controls.
 
-## 7. Pull New Data
+## 5. Pull New Data
 
 Click **Pull Data** on the Flask webpage.
 
-Pull Data checks GradCafe for newly submitted application results and
-adds new usable records to the PostgreSQL database.
+The application runs the scraper and loads newly collected applicant
+records into PostgreSQL.
 
-Depending on the amount of new data available, this process may take
-some time.
+Applicant URLs are unique, so overlapping records are not inserted
+repeatedly.
 
-The application prevents another scraping process from starting while
-one is already running.
+If a pull is already running, another pull request receives an HTTP
+409 busy response.
 
-## 8. Update the Analysis
+## 6. Update the Analysis
 
-Click **Update Analysis** to re-query the current PostgreSQL database
-and refresh the displayed results.
+Click **Update Analysis** to re-query the PostgreSQL database and
+refresh the analysis.
 
-Update Analysis does not initiate another scrape.
+Update Analysis does not start another scraping operation.
 
-# Written Reflection
+If the application is busy with a pull operation, the update request
+receives an HTTP 409 busy response.
 
-The limitations of analyzing anonymous, self-reported GradCafe data are
-discussed in:
+## 7. Run the Automated Tests
 
-`limitations.pdf`
+Run the complete test suite with:
 
-The reflection discusses issues including selection bias, self-reporting
-bias, missing or inconsistent values, representativeness, and the
-limitations of drawing conclusions about the broader applicant
-population from voluntarily submitted data.
+```bash
+python -m pytest
+```
 
-# Screenshots
+The expected completed local result is:
 
-The submission includes screenshots demonstrating:
+```text
+92 passed
+100% coverage
+```
 
-- raw SQL console output
-- SQLAlchemy ORM console output
-- the running Flask webpage
-- the Flask webpage controls
+A specific marker can also be run separately.
+
+For example:
+
+```bash
+python -m pytest -m web
+```
+
+or:
+
+```bash
+python -m pytest -m db
+```
+
+To run all required marker categories explicitly:
+
+```bash
+python -m pytest -m "web or buttons or analysis or db or integration"
+```
+
+# Sphinx Documentation
+
+Module 4 uses Sphinx for project documentation.
+
+The Sphinx source files are located in:
+
+```text
+docs/
+```
+
+The documentation contains:
+
+- Overview and Setup
+- Project Structure
+- Installation
+- Database Setup
+- Environment Variables
+- Application Architecture
+- Data Flow
+- Testing Architecture
+- API Reference
+- Testing Guide
+
+## API Documentation
+
+Sphinx autodoc generates API documentation from the source code.
+
+The API reference includes:
+
+- `src.scrape`
+- `src.clean`
+- `src.load_data`
+- `src.query_data`
+- `src.app`
+
+The Flask application functions and routes are therefore included in
+the generated documentation.
+
+## Build the Documentation
+
+From the `module_4` directory:
+
+```bash
+cd docs
+make html
+```
+
+The generated HTML documentation is written to:
+
+```text
+docs/_build/html/
+```
+
+The documentation home page is:
+
+```text
+docs/_build/html/index.html
+```
+
+The generated `_build` directory is excluded from Git because the HTML
+can be regenerated from the Sphinx source files.
+
+# Continuous Integration
+
+The repository uses GitHub Actions to run the Module 4 automated test
+suite in a clean environment.
+
+The workflow is located at:
+
+```text
+.github/workflows/tests.yml
+```
+
+The workflow:
+
+1. Checks out the repository.
+2. Sets up Python.
+3. Starts a PostgreSQL service.
+4. Installs the Module 4 requirements.
+5. Runs pytest.
+6. Enforces the project's coverage requirement.
+
+The workflow uses the `DATABASE_URL` environment variable to connect the
+test suite to the PostgreSQL service.
+
+A successful GitHub Actions run should be captured in:
+
+```text
+actions_success.png
+```
+
+# Test Design
+
+The automated tests are designed to be deterministic.
+
+They do not depend on live GradCafe internet access.
+
+Fake or mocked behavior is used where appropriate for:
+
+- scraper results
+- browser interaction
+- external operations
+- local LLM behavior
+
+The tests avoid arbitrary sleep calls and manual UI interaction.
+
+The application factory supports dependency injection so tests can
+provide fake scraper, loader, and analysis functions.
+
+# Database Idempotency
+
+Applicant URLs are unique in PostgreSQL.
+
+This allows repeated or overlapping data pulls to remain consistent.
+
+The integration tests verify a workflow in which:
+
+1. The first pull provides applicant records 1 and 2.
+2. The second pull provides records 2 and 3.
+3. Record 2 overlaps between both pulls.
+4. PostgreSQL prevents the duplicate URL from being inserted twice.
+5. The final database contains three unique records rather than four.
+
+# Project Documentation Files
+
+Important Module 4 documentation and configuration files include:
+
+```text
+README.md
+requirements.txt
+pytest.ini
+coverage_summary.txt
+docs/
+.github/workflows/tests.yml
+```
 
 # GitHub Repository
 
-The private GitHub repository SSH URL is provided in:
+The project is stored in the private JHU Software Concepts GitHub
+repository.
 
-`github.txt`
+The repository SSH URL is provided separately as required for
+submission.

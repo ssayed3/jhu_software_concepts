@@ -63,12 +63,12 @@ jobs:
           test -s dependency.svg
 
       - name: Run Snyk security scan
-        uses: snyk/actions/python@master
+        working-directory: module_5
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
-          args: --file=module_5/requirements.txt --package-manager=pip
+        run: |
+          npm install -g snyk
+          snyk test --file=requirements.txt --package-manager=pip
 
       - name: Run pytest
         working-directory: module_5

@@ -744,77 +744,253 @@ Then provide the local PostgreSQL connection values for:
 - `DB_PASSWORD`
 
 The real `.env` file is excluded from Git and must not be committed.
-Module 5 - Software Assurance and Secure SQL
-Module 5 extends the existing application with software assurance,
-secure database access, dependency analysis, vulnerability scanning,
-packaging, and continuous integration security checks.
+# Module 5 - Software Assurance and Secure SQL
+
+Module 5 extends the existing application with software assurance, secure
+database access, dependency analysis, vulnerability scanning, packaging, and
+continuous integration security checks.
+
 The main security and assurance improvements include:
 
-Pylint static analysis with a required score of 10.00/10
-parameterized PostgreSQL queries to reduce SQL injection risk
-safe SQL composition using psycopg.sql
-limits on database query results
-database credentials supplied through environment variables
-a least-privilege PostgreSQL application user
-dependency visualization using pydeps and Graphviz
-dependency vulnerability scanning using Snyk
-reproducible installation using pip or uv
-automated GitHub Actions checks
-Static Analysis with Pylint
+- Pylint static analysis with a required score of 10.00/10
+- parameterized PostgreSQL queries to reduce SQL injection risk
+- safe SQL composition using `psycopg.sql`
+- inherent limits on result-returning database queries
+- database credentials supplied through environment variables
+- a least-privilege PostgreSQL application user
+- dependency visualization using pydeps and Graphviz
+- dependency vulnerability scanning using Snyk
+- reproducible installation using pip or uv
+- automated GitHub Actions checks
+
+## Static Analysis with Pylint
+
 Run:
+
+```bash
 python -m pylint src --disable=duplicate-code --fail-under=10
+```
+
 The final Module 5 result is:
+
+```text
 10.00/10
-The result is also recorded in pylint_report.txt.
-SQL Injection Defense
+```
+
+The result is also recorded in:
+
+```text
+pylint_report.txt
+```
+
+## SQL Injection Defense
+
 Database queries that use external or variable values use parameterized
-queries rather than inserting values directly into SQL strings. The project
-avoids constructing SQL queries using f-strings, string concatenation, or
-.format() with user-controlled values.
-psycopg.sql.SQL is used for safe SQL statement construction, while values
-are supplied separately using %s parameters.
+queries rather than inserting values directly into SQL strings.
 
-Query Result Limits
-Queries include an inherent LIMIT where appropriate. A limit-clamping
-function restricts requested result limits to a safe range of 1 through 100.
-Database Configuration and Least Privilege
-Database credentials are not hard-coded in the source code. The application
-reads DB_HOST, DB_PORT, DB_NAME, DB_USER, and DB_PASSWORD.
-An example configuration is provided in .env.example. Local credentials are
-stored in .env, which is excluded from Git.
+The project avoids constructing SQL queries using f-strings, string
+concatenation, or `.format()` with user-controlled values.
 
-For normal local application access, a restricted PostgreSQL role is used
-rather than the PostgreSQL superuser. Administrative schema creation remains
-outside the normal application role.
+`psycopg.sql.SQL` is used for safe SQL statement construction where
+appropriate, while values are supplied separately using `%s` parameters.
 
-Dependency Analysis
+Dynamic SQL identifiers can be safely represented using
+`psycopg.sql.Identifier` rather than directly concatenating table or column
+names into SQL statements.
+
+A SQL injection test also verifies that malicious-looking input such as:
+
+```text
+' OR 1=1 --
+```
+
+is passed to PostgreSQL as data rather than becoming part of the SQL
+statement.
+
+## Query Result Limits
+
+Result-returning database queries include inherent limits.
+
+Queries that return a single aggregate or record use `LIMIT 1` where
+applicable. Queries that may return multiple records are bounded rather than
+being allowed to return an unlimited result set.
+
+For queries accepting a variable result limit, the project uses a
+limit-clamping function that restricts the requested limit to the safe range
+of 1 through 100.
+
+This provides an additional safeguard against unexpectedly large database
+responses.
+
+## Database Configuration
+
+Database credentials are not hard-coded in the application source code.
+
+The application reads the following environment variables:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+
+An example configuration is provided in:
+
+```text
+.env.example
+```
+
+Real local credentials are stored in `.env`, which is excluded from Git by
+`.gitignore` and is not committed to the repository.
+
+PostgreSQL integration tests obtain their database connection URL from the
+`DATABASE_URL` environment variable rather than embedding a local database
+connection string in the test source code.
+
+## Least-Privilege Database User
+
+Normal application database access uses the restricted PostgreSQL role:
+
+```text
+module5_app
+```
+
+The role follows the principle of least privilege.
+
+The verified permissions are:
+
+- `SELECT` on the `applicants` table: allowed
+- `INSERT` on the `applicants` table: allowed
+- `UPDATE` on the `applicants` table: denied
+- `DELETE` on the `applicants` table: denied
+- sequence usage for `applicants_p_id_seq`: allowed
+- creation of schema objects in `public`: denied
+- PostgreSQL superuser privileges: denied
+- role creation privileges: denied
+- database creation privileges: denied
+
+The `applicants` table is not owned by `module5_app`, so the normal
+application role is separated from administrative table ownership.
+
+Administrative schema creation and other privileged database operations
+remain outside the normal application role.
+
+## Dependency Analysis
+
 Generate the dependency graph with:
+
+```bash
 pydeps src --noshow -T svg -o dependency.svg --max-bacon=2
-The resulting graph is stored in dependency.svg.
-Dependency Vulnerability Scanning
+```
+
+The resulting graph is stored in:
+
+```text
+dependency.svg
+```
+
+The dependency graph shows the relationships among the Module 5 source
+modules and their important third-party dependencies. `src.app` contains the
+Flask application and interacts with the application's database and loading
+components. `src.models` provides the SQLAlchemy model and uses the
+centralized database configuration in `src.db_config`. `src.db_config`
+centralizes PostgreSQL connectivity and is used by database-related modules
+such as `src.load_data`, `src.query_data`, and `src.models`. `src.orm_queries`
+uses SQLAlchemy and the applicant model to perform ORM-based analysis.
+`src.scrape` contains the scraping functionality and supports the data
+collection workflow. Overall, the graph demonstrates separation among the
+web application, database configuration, persistence, querying, and scraping
+responsibilities.
+
+## Dependency Vulnerability Scanning
+
 Run:
-snyk test
-The final local Snyk scan reported:
+
+```bash
+snyk test --file=requirements.txt --package-manager=pip
+```
+
+The final local Snyk scan tested 49 dependencies and reported:
+
+```text
 Total issues: 0
-A screenshot is stored in snyk-analysis.png.
-Module 5 Testing
+No vulnerable paths found
+```
+
+A screenshot of the successful scan is stored in:
+
+```text
+snyk-analysis.png
+```
+
+## Packaging
+
+Module 5 includes:
+
+```text
+requirements.txt
+setup.py
+```
+
+`requirements.txt` records the project's runtime, testing, static-analysis,
+documentation, and dependency-analysis packages.
+
+`setup.py` provides package metadata and allows the project to be installed
+in editable mode.
+
+The Fresh Install section above provides reproducible installation
+instructions using both pip and uv.
+
+## Module 5 Testing
+
 Run:
+
+```bash
 python -m pytest
+```
+
 The final local Module 5 result is:
+
+```text
 95 passed
 613 statements
 0 missed
 100% coverage
-The coverage result is recorded in coverage_summary.txt.
-Module 5 Continuous Integration
+```
+
+The coverage result is recorded in:
+
+```text
+coverage_summary.txt
+```
+
+## Module 5 Continuous Integration
+
 GitHub Actions runs the Module 5 software assurance checks on pushes and pull
-requests. The workflow is located at .github/workflows/tests.yml.
-The workflow checks out the repository, sets up Python, starts PostgreSQL 17,
-installs dependencies, runs Pylint, generates dependency.svg, runs Snyk, and
-runs the complete pytest suite.
+requests.
 
-The Snyk API token is stored as the GitHub repository secret SNYK_TOKEN and
-is not stored in the repository.
+The workflow is located at:
 
-A successful Module 5 GitHub Actions run will be captured in
-actions_success.png.
+```text
+.github/workflows/ci.yml
+```
+
+The workflow performs four main assurance checks:
+
+1. Runs Pylint with a required score of 10.00/10.
+2. Generates and verifies `dependency.svg`.
+3. Runs the Snyk dependency vulnerability scan.
+4. Runs the complete pytest test suite.
+
+The CI environment also starts PostgreSQL 17 for the database-dependent
+tests.
+
+The Snyk API token is stored as the GitHub repository secret `SNYK_TOKEN`
+and is not stored in the repository.
+
+A successful GitHub Actions run is captured in:
+
+```text
+actions_success.png
+```
+

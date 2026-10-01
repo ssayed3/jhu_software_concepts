@@ -1,0 +1,11 @@
+beautifulsoup4
+Flask>=2.3,<4
+psycopg[binary]>=3.2,<4
+SQLAlchemy>=2.0,<3
+python-dotenv
+pytest
+pytest-cov
+pylint
+pydeps
+sphinx
+setuptools

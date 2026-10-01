@@ -1,4 +1,4 @@
-name: Module 4 Tests
+name: Module 5 Software Assurance
 
 on:
   push:
@@ -14,18 +14,22 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: module4_test_db
+          POSTGRES_DB: module3_db
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd "pg_isready -U postgres -d module3_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/module4_test_db
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: module3_db
       DB_USER: postgres
+      DB_PASSWORD: postgres
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/module3_db
 
     steps:
       - name: Check out repository
@@ -36,13 +40,37 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install dependencies
-        working-directory: module_4
+      - name: Install Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      - name: Install Module 5 dependencies
+        working-directory: module_5
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with coverage
-        working-directory: module_4
+      - name: Run Pylint
+        working-directory: module_5
+        run: |
+          python -m pylint src --disable=duplicate-code --fail-under=10
+
+      - name: Generate dependency graph
+        working-directory: module_5
+        run: |
+          pydeps src --noshow -T svg -o dependency.svg --max-bacon=2
+          test -s dependency.svg
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --file=module_5/requirements.txt --package-manager=pip
+
+      - name: Run pytest
+        working-directory: module_5
         run: |
           python -m pytest

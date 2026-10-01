@@ -25,12 +25,12 @@ scrape_status = "Ready to pull new data."  # pylint: disable=invalid-name
 def get_analysis_results():  # pylint: disable=too-many-locals
     """Query the database and return the applicant analysis results."""
     with SessionLocal() as session:
-
         # Question 1
         q1 = session.scalar(
             select(func.count())
             .select_from(Applicant)
             .where(func.lower(Applicant.term) == "fall 2026")
+            .limit(1)
         )
 
         # Question 2
@@ -41,6 +41,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 Applicant.us_or_international.is_not(None),
                 func.trim(Applicant.us_or_international) != ""
             )
+            .limit(1)
         )
 
         international = session.scalar(
@@ -50,6 +51,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 func.lower(Applicant.us_or_international)
                 == "international"
             )
+            .limit(1)
         )
 
         q2 = (
@@ -66,6 +68,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 func.avg(Applicant.gre_v),
                 func.avg(Applicant.gre_aw)
             )
+            .limit(1)
         ).one()
 
         # Question 4
@@ -77,6 +80,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 == "american",
                 Applicant.gpa.is_not(None)
             )
+            .limit(1)
         )
 
         # Question 5
@@ -84,6 +88,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
             select(func.count())
             .select_from(Applicant)
             .where(func.lower(Applicant.term) == "fall 2025")
+            .limit(1)
         )
 
         fall_2025_accepted = session.scalar(
@@ -93,6 +98,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 func.lower(Applicant.term) == "fall 2025",
                 func.lower(Applicant.status) == "accepted"
             )
+            .limit(1)
         )
 
         q5 = (
@@ -109,6 +115,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 func.lower(Applicant.status) == "accepted",
                 Applicant.gpa.is_not(None)
             )
+            .limit(1)
         )
 
         # Question 7
@@ -117,22 +124,23 @@ def get_analysis_results():  # pylint: disable=too-many-locals
             .select_from(Applicant)
             .where(
                 (
-                    func.lower(Applicant.program)
-                    .like("%johns hopkins%")
-                    | func.lower(Applicant.program).like("%jhu%")
+                        func.lower(Applicant.program)
+                        .like("%johns hopkins%")
+                        | func.lower(Applicant.program).like("%jhu%")
                 ),
                 (
-                    func.lower(Applicant.program)
-                    .like("%computer science%")
-                    | func.lower(Applicant.program).like("% cs%")
+                        func.lower(Applicant.program)
+                        .like("%computer science%")
+                        | func.lower(Applicant.program).like("% cs%")
                 ),
                 (
-                    func.lower(Applicant.degree).like("%master%")
-                    | func.lower(Applicant.degree).in_(
-                        ["ms", "m.s.", "msc", "m.sc."]
-                    )
+                        func.lower(Applicant.degree).like("%master%")
+                        | func.lower(Applicant.degree).in_(
+                    ["ms", "m.s.", "msc", "m.sc."]
+                )
                 )
             )
+            .limit(1)
         )
 
         # Question 8
@@ -146,23 +154,24 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                     ["phd", "ph.d.", "ph.d"]
                 ),
                 (
-                    func.lower(Applicant.program)
-                    .like("%computer science%")
-                    | func.lower(Applicant.program).like("% cs%")
+                        func.lower(Applicant.program)
+                        .like("%computer science%")
+                        | func.lower(Applicant.program).like("% cs%")
                 ),
                 (
-                    func.lower(Applicant.program).like("%georgetown%")
-                    | func.lower(Applicant.program).like(
-                        "%massachusetts institute of technology%"
-                    )
-                    | func.lower(Applicant.program).like("% mit,%")
-                    | func.lower(Applicant.program).like("%stanford%")
-                    | func.lower(Applicant.program).like(
-                        "%carnegie mellon%"
-                    )
-                    | func.lower(Applicant.program).like("%cmu%")
+                        func.lower(Applicant.program).like("%georgetown%")
+                        | func.lower(Applicant.program).like(
+                    "%massachusetts institute of technology%"
+                )
+                        | func.lower(Applicant.program).like("% mit,%")
+                        | func.lower(Applicant.program).like("%stanford%")
+                        | func.lower(Applicant.program).like(
+                    "%carnegie mellon%"
+                )
+                        | func.lower(Applicant.program).like("%cmu%")
                 )
             )
+            .limit(1)
         )
 
         # Question 9
@@ -176,42 +185,43 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                     ["phd", "ph.d.", "ph.d"]
                 ),
                 (
-                    func.lower(
-                        Applicant.llm_generated_program
-                    ).like("%computer science%")
-                    | (
                         func.lower(
                             Applicant.llm_generated_program
-                        ) == "cs"
-                    )
+                        ).like("%computer science%")
+                        | (
+                                func.lower(
+                                    Applicant.llm_generated_program
+                                ) == "cs"
+                        )
                 ),
                 (
-                    func.lower(
-                        Applicant.llm_generated_university
-                    ).like("%georgetown%")
-                    | func.lower(
-                        Applicant.llm_generated_university
-                    ).like(
-                        "%massachusetts institute of technology%"
-                    )
-                    | (
                         func.lower(
                             Applicant.llm_generated_university
-                        ) == "mit"
-                    )
-                    | func.lower(
-                        Applicant.llm_generated_university
-                    ).like("%stanford%")
-                    | func.lower(
-                        Applicant.llm_generated_university
-                    ).like("%carnegie mellon%")
-                    | (
-                        func.lower(
-                            Applicant.llm_generated_university
-                        ) == "cmu"
-                    )
+                        ).like("%georgetown%")
+                        | func.lower(
+                    Applicant.llm_generated_university
+                ).like(
+                    "%massachusetts institute of technology%"
+                )
+                        | (
+                                func.lower(
+                                    Applicant.llm_generated_university
+                                ) == "mit"
+                        )
+                        | func.lower(
+                    Applicant.llm_generated_university
+                ).like("%stanford%")
+                        | func.lower(
+                    Applicant.llm_generated_university
+                ).like("%carnegie mellon%")
+                        | (
+                                func.lower(
+                                    Applicant.llm_generated_university
+                                ) == "cmu"
+                        )
                 )
             )
+            .limit(1)
         )
 
         # Question 10
@@ -222,6 +232,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 func.lower(Applicant.term) == "fall 2026",
                 func.lower(Applicant.status) == "accepted"
             )
+            .limit(1)
         )
 
         # Question 11
@@ -233,6 +244,7 @@ def get_analysis_results():  # pylint: disable=too-many-locals
                 == "international",
                 Applicant.gpa.is_not(None)
             )
+            .limit(1)
         )
 
         results = [

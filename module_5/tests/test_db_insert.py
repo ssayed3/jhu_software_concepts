@@ -373,10 +373,7 @@ def test_real_postgresql_insert_and_idempotency(tmp_path):
     import psycopg
     import src.load_data as load_data
 
-    test_database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://sayedsayed@/module4_test_db"
-    )
+    test_database_url = os.environ["DATABASE_URL"]
 
     applicants = [
         {
@@ -412,13 +409,14 @@ def test_real_postgresql_insert_and_idempotency(tmp_path):
         conn.commit()
 
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM applicants;")
+            cur.execute("SELECT COUNT(*) FROM applicants LIMIT 1;")
             count = cur.fetchone()[0]
 
             cur.execute("""
                 SELECT program, url, status, degree
                 FROM applicants
-                ORDER BY url;
+                ORDER BY url
+                LIMIT 100;
             """)
             rows = cur.fetchall()
 

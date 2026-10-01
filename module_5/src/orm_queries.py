@@ -15,6 +15,7 @@ def question_1(session):
         select(func.count())
         .select_from(Applicant)
         .where(func.lower(Applicant.term) == "fall 2026")
+        .limit(1)
     )
 
     result = session.scalar(statement)
@@ -32,6 +33,7 @@ def question_4(session):
             func.lower(Applicant.us_or_international) == "american",
             Applicant.gpa.is_not(None)
         )
+        .limit(1)
     )
 
     result = session.scalar(statement)
@@ -46,6 +48,7 @@ def question_5(session):
         select(func.count())
         .select_from(Applicant)
         .where(func.lower(Applicant.term) == "fall 2025")
+        .limit(1)
     )
 
     accepted_statement = (
@@ -55,6 +58,7 @@ def question_5(session):
             func.lower(Applicant.term) == "fall 2025",
             func.lower(Applicant.status) == "accepted"
         )
+        .limit(1)
     )
 
     total = session.scalar(total_statement)
@@ -90,6 +94,7 @@ def question_8(session):
                 | func.lower(Applicant.program).like("%cmu%")
             )
         )
+        .limit(1)
     )
 
     result = session.scalar(statement)
@@ -136,6 +141,7 @@ def question_9(session, original_count):
                 | (func.lower(Applicant.llm_generated_university) == "cmu")
             )
         )
+        .limit(1)
     )
 
     llm_count = session.scalar(statement)
@@ -171,6 +177,7 @@ def question_10(session):
             func.lower(Applicant.term) == "fall 2026",
             func.lower(Applicant.status) == "accepted"
         )
+        .limit(1)
     )
 
     result = session.scalar(statement)

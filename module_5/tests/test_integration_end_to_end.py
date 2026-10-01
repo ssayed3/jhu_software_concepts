@@ -5,6 +5,7 @@ import psycopg
 from src.app import create_app, scrape_lock
 from src import load_data
 
+
 def fake_scraper():
     return [
         {
@@ -20,6 +21,7 @@ def fake_scraper():
             "applicant_url": "https://example.com/integration-2"
         }
     ]
+
 
 def fake_scraper_with_overlap():
     return [
@@ -37,11 +39,13 @@ def fake_scraper_with_overlap():
         }
     ]
 
+
 loaded_rows = []
 
 
 def fake_loader(rows):
     loaded_rows.extend(rows)
+
 
 def fake_analysis():
     if loaded_rows:
@@ -58,6 +62,7 @@ def fake_analysis():
             "answer": "0"
         }
     ]
+
 
 @pytest.mark.integration
 def test_end_to_end_workflow():
@@ -85,6 +90,7 @@ def test_end_to_end_workflow():
     assert b"Answer:" in page_response.data
     assert b"2" in page_response.data
 
+
 @pytest.mark.integration
 def test_overlapping_pulls():
     scrape_lock.acquire()
@@ -107,12 +113,10 @@ def test_overlapping_pulls():
     finally:
         scrape_lock.release()
 
+
 @pytest.mark.integration
 def test_end_to_end_with_postgresql():
-    database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://sayedsayed@/module4_test_db"
-    )
+    database_url = os.environ["DATABASE_URL"]
 
     # Start with a clean applicants table
     with psycopg.connect(database_url) as conn:
@@ -161,7 +165,7 @@ def test_end_to_end_with_postgresql():
     # Verify that the two records really reached PostgreSQL
     with psycopg.connect(database_url) as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM applicants")
+            cur.execute("SELECT COUNT(*) FROM applicants LIMIT 1")
             count = cur.fetchone()[0]
 
     assert count == 2
@@ -176,12 +180,10 @@ def test_end_to_end_with_postgresql():
     assert b"Analysis" in page_response.data
     assert b"Answer:" in page_response.data
 
+
 @pytest.mark.integration
 def test_multiple_pulls_with_overlapping_data():
-    database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://sayedsayed@/module4_test_db"
-    )
+    database_url = os.environ["DATABASE_URL"]
 
     # Start with a clean applicants table
     with psycopg.connect(database_url) as conn:
@@ -197,9 +199,9 @@ def test_multiple_pulls_with_overlapping_data():
         import tempfile
 
         with tempfile.NamedTemporaryFile(
-            mode="w",
-            suffix=".json",
-            delete=False
+                mode="w",
+                suffix=".json",
+                delete=False
         ) as temp_file:
             json.dump(rows, temp_file)
             temp_path = temp_file.name
@@ -239,7 +241,7 @@ def test_multiple_pulls_with_overlapping_data():
     # There should be 3 unique records, not 4
     with psycopg.connect(database_url) as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM applicants")
+            cur.execute("SELECT COUNT(*) FROM applicants LIMIT 1")
             count = cur.fetchone()[0]
 
     assert count == 3
